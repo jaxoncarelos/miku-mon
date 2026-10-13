@@ -1,0 +1,11 @@
+{
+  "x": 8,
+  "y": 8,
+  "facing": "s",
+  "steps": 0,
+  "battles": 0,
+  "wins": 0,
+  "party": [{ "name": "Mikachu", "type": "elec", "hp": 40, "atk": 12, "color": "#7ee0ff", "cur": 40 }],
+  "log": ["Hatsune Miku boots Miku-Mon. Catch vibes, not copyright."],
+  "lastPlay": null
+}
