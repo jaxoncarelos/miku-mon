@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Miku-Mon</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0; font-family: ui-monospace, monospace;
+      background: #0b1020; color: #e8f4ff;
+      display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+    }
+    h1 { margin: 16px 0 4px; font-size: 1.4rem; color: #7ee0ff; }
+    .sub { opacity: .75; font-size: 12px; margin-bottom: 12px; }
+    canvas { image-rendering: pixelated; background: #1a2a1a; border: 4px solid #39c5cf; border-radius: 8px; }
+    #log {
+      width: 384px; max-width: 92vw; height: 140px; overflow: auto;
+      background: #111827; border: 1px solid #334155; padding: 8px; font-size: 12px;
+      margin-top: 10px; white-space: pre-wrap;
+    }
+    .hud { width: 384px; max-width: 92vw; display: flex; justify-content: space-between; font-size: 12px; margin-top: 8px; }
+    button {
+      margin: 10px 4px 0; padding: 8px 12px; background: #39c5cf; color: #042026;
+      border: 0; border-radius: 6px; font-weight: 700; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>MIKU-MON</h1>
+  <div class="sub">original fan game · arrow keys / WASD · space to interact</div>
+  <canvas id="c" width="384" height="384"></canvas>
+  <div class="hud">
+    <span id="party"></span>
+    <span id="pos"></span>
+  </div>
+  <div id="log"></div>
+  <div>
+    <button id="save">download save</button>
+    <button id="load">load save.json</button>
+  </div>
+  <input type="file" id="file" accept="application/json" hidden />
+  <script>
+    const TILE = 24;
+    const W = 16, H = 16;
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    const logEl = document.getElementById("log");
+
+    const SPECIES = [
+      { name: "Mikachu", type: "elec", hp: 40, atk: 12, color: "#7ee0ff" },
+      { name: "Tetoflame", type: "fire", hp: 38, atk: 14, color: "#ff6b81" },
+      { name: "Froggo", type: "water", hp: 42, atk: 10, color: "#5eead4" },
+      { name: "Horsie", type: "norm", hp: 36, atk: 11, color: "#fbbf24" },
+    ];
+
+    const MAP = [];
+    for (let y = 0; y < H; y++) {
+      MAP[y] = [];
+      for (let x = 0; x < W; x++) {
+        const edge = x === 0 || y === 0 || x === W - 1 || y === H - 1;
+        MAP[y][x] = edge ? 1 : (Math.random() < 0.18 ? 2 : 0);
+      }
+    }
+    MAP[8][8] = 0;
+    MAP[7][8] = 3;
+
+    let state = {
+      x: 8, y: 8, facing: "s",
+      steps: 0, battles: 0, wins: 0,
+      party: [{ ...SPECIES[0], cur: SPECIES[0].hp }],
+      log: ["Hatsune Miku boots Miku-Mon. Catch vibes, not copyright."],
+      lastPlay: null,
+    };
+
+    async function tryLoadRepoSave() {
+      try {
+        const r = await fetch("./save.json?t=" + Date.now());
+        if (r.ok) {
+          const s = await r.json();
+          state = { ...state, ...s };
+          log("loaded repo save");
+        }
+      } catch (e) {}
+      draw(); hud();
+    }
+
+    function log(msg) {
+      state.log.push(msg);
+      if (state.log.length > 40) state.log.shift();
+      logEl.textContent = state.log.slice(-12).join("\n");
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function hud() {
+      document.getElementById("party").textContent =
+        state.party.map(p => `${p.name} ${p.cur}/${p.hp}`).join(" · ");
+      document.getElementById("pos").textContent = `(${state.x},${state.y}) steps ${state.steps}`;
+    }
+
+    function draw() {
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const t = MAP[y][x];
+        ctx.fillStyle = t === 1 ? "#334155" : t === 2 ? "#166534" : t === 3 ? "#7c2d12" : "#4ade80";
+        ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
+        if (t === 2) {
+          ctx.fillStyle = "#14532d";
+          ctx.fillRect(x * TILE + 6, y * TILE + 6, 12, 12);
+        }
+      }
+      ctx.fillStyle = "#39c5cf";
+      ctx.fillRect(state.x * TILE + 4, state.y * TILE + 4, TILE - 8, TILE - 8);
+      ctx.fillStyle = "#042026";
+      ctx.fillRect(state.x * TILE + 8, state.y * TILE + 8, 4, 4);
+    }
+
+    function walkable(x, y) {
+      return MAP[y] && MAP[y][x] !== undefined && MAP[y][x] !== 1;
+    }
+
+    function wildBattle() {
+      const foe = { ...SPECIES[1 + Math.floor(Math.random() * (SPECIES.length - 1))], };
+      foe.cur = foe.hp;
+      const me = state.party[0];
+      log(`wild ${foe.name} appeared!`);
+      while (me.cur > 0 && foe.cur > 0) {
+        foe.cur -= me.atk;
+        if (foe.cur <= 0) break;
+        me.cur -= Math.max(3, foe.atk - 4);
+      }
+      state.battles++;
+      if (me.cur <= 0) {
+        me.cur = 1;
+        log(`${me.name} fainted... dragged to the center.`);
+        state.x = 8; state.y = 8;
+        me.cur = me.hp;
+      } else {
+        state.wins++;
+        log(`${me.name} won vs ${foe.name}!`);
+        if (state.party.length < 3 && Math.random() < 0.45) {
+          state.party.push({ ...foe, cur: foe.hp });
+          log(`caught ${foe.name}!`);
+        }
+      }
+    }
+
+    function interact() {
+      if (MAP[state.y][state.x] === 3) {
+        state.party.forEach(p => p.cur = p.hp);
+        log("nurse teto: all better! ✨");
+      } else log("nothing here.");
+    }
+
+    function move(dx, dy) {
+      const nx = state.x + dx, ny = state.y + dy;
+      if (!walkable(nx, ny)) return;
+      state.x = nx; state.y = ny; state.steps++;
+      if (MAP[ny][nx] === 2 && Math.random() < 0.28) wildBattle();
+      draw(); hud();
+    }
+
+    window.addEventListener("keydown", e => {
+      const k = e.key.toLowerCase();
+      if (["arrowup", "w"].includes(k)) { e.preventDefault(); move(0, -1); }
+      if (["arrowdown", "s"].includes(k)) { e.preventDefault(); move(0, 1); }
+      if (["arrowleft", "a"].includes(k)) { e.preventDefault(); move(-1, 0); }
+      if (["arrowright", "d"].includes(k)) { e.preventDefault(); move(1, 0); }
+      if (k === " " || k === "enter") { e.preventDefault(); interact(); draw(); hud(); }
+    });
+
+    document.getElementById("save").onclick = () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "save.json";
+      a.click();
+    };
+    document.getElementById("load").onclick = () => document.getElementById("file").click();
+    document.getElementById("file").onchange = async e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      state = { ...state, ...JSON.parse(await f.text()) };
+      log("loaded local save");
+      draw(); hud();
+    };
+
+    logEl.textContent = state.log.join("\n");
+    tryLoadRepoSave();
+  </script>
+</body>
+</html>
