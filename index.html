@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Miku-Mon</title>
+  <title>Miku-Mon + Unciv</title>
   <style>
     :root { color-scheme: dark; }
     body {
@@ -12,7 +12,7 @@
       display: flex; flex-direction: column; align-items: center; min-height: 100vh;
     }
     h1 { margin: 16px 0 4px; font-size: 1.4rem; color: #7ee0ff; }
-    .sub { opacity: .75; font-size: 12px; margin-bottom: 12px; }
+    .sub { opacity: .75; font-size: 12px; margin-bottom: 12px; text-align: center; max-width: 90vw; }
     canvas { image-rendering: pixelated; background: #1a2a1a; border: 4px solid #39c5cf; border-radius: 8px; }
     #log {
       width: 384px; max-width: 92vw; height: 140px; overflow: auto;
@@ -24,9 +24,32 @@
       margin: 10px 4px 0; padding: 8px 12px; background: #39c5cf; color: #042026;
       border: 0; border-radius: 6px; font-weight: 700; cursor: pointer;
     }
+    #unciv-wrap {
+      width: min(1100px, 96vw);
+      height: min(720px, 70vh);
+      margin: 8px 0 24px;
+      border: 4px solid #39c5cf;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #111;
+    }
+    #unciv-wrap iframe { width: 100%; height: 100%; border: 0; }
+    .note { font-size: 11px; opacity: .7; margin: 0 16px 16px; text-align: center; max-width: 90vw; }
   </style>
 </head>
 <body>
+  <h1>UNCIV</h1>
+  <div class="sub">open-source Civ V remake · MPL 2.0 · original assets · yairm210/Unciv</div>
+  <div id="unciv-wrap">
+    <iframe
+      src="https://will-ca.github.io/Unciv/"
+      title="Unciv"
+      allow="fullscreen"
+      loading="lazy"
+    ></iframe>
+  </div>
+  <p class="note">If the iframe is blank, the host blocked embedding — open <a href="https://will-ca.github.io/Unciv/" style="color:#7ee0ff">will-ca.github.io/Unciv</a> or the desktop/Android build. Not a Nintendo/Firaxis asset dump.</p>
+
   <h1>MIKU-MON</h1>
   <div class="sub">original fan game · arrow keys / WASD · space to interact</div>
   <canvas id="c" width="384" height="384"></canvas>
