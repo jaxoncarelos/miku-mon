@@ -1,11 +1,27 @@
 {
-  "x": 8,
-  "y": 8,
-  "facing": "s",
-  "steps": 0,
-  "battles": 0,
-  "wins": 0,
-  "party": [{ "name": "Mikachu", "type": "elec", "hp": 40, "atk": 12, "color": "#7ee0ff", "cur": 40 }],
-  "log": ["Hatsune Miku boots Miku-Mon. Catch vibes, not copyright."],
-  "lastPlay": null
+  "x": 10,
+  "y": 7,
+  "facing": "e",
+  "steps": 48,
+  "battles": 6,
+  "wins": 3,
+  "party": [
+    { "name": "Mikachu", "type": "elec", "hp": 40, "atk": 12, "color": "#7ee0ff", "cur": 40 },
+    { "name": "Horsie", "type": "norm", "hp": 36, "atk": 11, "color": "#fbbf24", "cur": 36 }
+  ],
+  "log": [
+    "Hatsune Miku boots Miku-Mon. Catch vibes, not copyright.",
+    "wild Horsie appeared!",
+    "Mikachu won vs Horsie!",
+    "caught Horsie!",
+    "wild Tetoflame appeared!",
+    "Mikachu fainted... nurse time",
+    "wild Tetoflame appeared!",
+    "Mikachu won vs Tetoflame!",
+    "wild Horsie appeared!",
+    "Mikachu fainted... nurse time",
+    "nurse teto: all better!"
+  ],
+  "lastPlay": "2026-10-13T05:40:44Z",
+  "mapSeed": 39
 }
